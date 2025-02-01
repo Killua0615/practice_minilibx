@@ -1,49 +1,77 @@
-NAME := minilibx
-SOURCE := test_mlx.c
-OBJECT := $(SOURCE:.c=.o)
-UNAME := $(shell uname -s)
-# LFTDIR := libft
-# LFT := $(LFTDIR)/libft.a
-MLXDIR := minilibx-linux
-MLX := $(MLXDIR)/libmlx.a
+NAME        := minilibx
+
+SOURCE      := test_mlx.c
+
+OBJECT      := $(SOURCE:.c=.o)
+
+UNAME       := $(shell uname -s)
+
+MLXDIR      := minilibx-linux
+MLX         := $(MLXDIR)/libmlx.a
+
+
+LFTDIR      := libft
+LFT         := $(LFTDIR)/libft.a
+LFT_REPO    := https://github.com/Killua0615/libft.git
+
+FTPRINTFDIR := ft_printf
+FTPRINTF     := $(FTPRINTFDIR)/libftprintf.a
+FTPRINTF_REPO:= https://github.com/Killua0615/ft_printf.git
+
+CC          := cc
+CFLAGS      := -Wall -Wextra -Werror
+
 ifeq ($(UNAME), Linux)
-CFLAGS := -Wall -Wextra -Werror -I$(MLXDIR)
-LDLIBS := -lXext -lX11 
-else
-CFLAGS := -Wall -Wextra -Werror -I$(MLXDIR) -I/usr/X11/include
-LDFLAGS := -L/usr/X11/lib
-LDLIBS := -lXext -lX11 -framework OpenGL -framework AppKit
+  CFLAGS  += -I$(MLXDIR)
+  LDFLAGS :=
+  LDLIBS   = -L$(MLXDIR) -lmlx -lXext -lX11
+
+else ifeq ($(UNAME), Darwin)
+  CFLAGS  += -I$(MLXDIR) -I/usr/X11/include
+  LDFLAGS := -L/usr/X11/lib
+  LDLIBS   = -L$(MLXDIR) -lmlx -lXext -lX11 -framework OpenGL -framework AppKit
 endif
 
-$(NAME): $(MLX) $(OBJECT)
-ifeq ($(UNAME), Linux)
-	$(LINK.o) $(OBJECT) $(LDLIBS) $(MLX)  -o $@
-else
-	$(LINK.o) $^ $(LDLIBS) -o $@
-endif
+LDLIBS     += $(LFT) $(FTPRINTF)
 
-$(LFT): | $(LFTDIR)
-	$(MAKE) -C $(LFTDIR)
+all: $(NAME)
 
-# $(LFTDIR):
-# 	git clone https://github.com/liqsuq/libft
+$(NAME): $(MLX) $(LFT) $(FTPRINTF) $(OBJECT)
+	$(CC) $(CFLAGS) $(OBJECT) $(LDFLAGS) $(LDLIBS) -o $@
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(MLX): | $(MLXDIR)
 	$(MAKE) -C $(MLXDIR)
 
 $(MLXDIR):
-	git clone https://github.com/42Paris/minilibx-linux
+	git clone https://github.com/42Paris/minilibx-linux $(MLXDIR)
 
-all: $(NAME)
+$(LFT): | $(LFTDIR)
+	$(MAKE) -C $(LFTDIR)
+
+$(LFTDIR):
+	git clone $(LFT_REPO) $(LFTDIR)
+
+$(FTPRINTF): | $(FTPRINTFDIR)
+	$(MAKE) -C $(FTPRINTFDIR)
+
+$(FTPRINTFDIR):
+	git clone $(FTPRINTF_REPO) $(FTPRINTFDIR)
 
 clean:
-	-$(MAKE) -C $(LFTDIR) clean
-	-$(MAKE) -C $(MLXDIR) clean
 	$(RM) $(OBJECT)
+	-$(MAKE) -C $(MLXDIR) clean || true
+	-$(MAKE) -C $(LFTDIR) clean || true
+	-$(MAKE) -C $(FTPRINTFDIR) clean || true
 
 fclean: clean
-	$(RM) -r $(LFTDIR)
-	$(RM) -r $(MLXDIR)
 	$(RM) $(NAME)
+	$(RM) -r $(MLXDIR)
+	$(RM) -r $(LFTDIR)
+	$(RM) -r $(FTPRINTFDIR)
 
 re: fclean all
+
+.PHONY: all clean fclean re
