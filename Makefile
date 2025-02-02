@@ -1,6 +1,6 @@
 NAME        := minilibx
 
-SOURCE      := test_mlx.c
+SOURCE      := draw_shapes.c
 
 OBJECT      := $(SOURCE:.c=.o)
 
